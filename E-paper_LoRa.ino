@@ -74,9 +74,9 @@ void setup() {
   /* This displays the data from the SRAM in e-Paper module */
   epd.DisplayFrame();
 
-  /* This displays an image */
+  /* This displays an image 
   epd.DisplayFrame(IMAGE_BLACK, IMAGE_RED);
-
+*/
   /* Deep sleep */
   epd.Sleep();
 
@@ -88,7 +88,34 @@ delay(500);
     while (1);
   } 
 }
+
 void loop() {
   // put your main code here, to run repeatedly:
+    // try to parse packet
+  int packetSize = LoRa.parsePacket();
+  if (packetSize) {
+    // received a packet
+    Serial.print("Received packet '");
+    // read packet
+    while (LoRa.available()) {
+      Serial.print((char)LoRa.read());
+    }
+    // print RSSI of packet
+    Serial.println("' with RSSI ");
+    int Rssi = (LoRa.packetRssi());
+
+    LoRa.sleep();
+    Epd epd;
+
+  unsigned char image[1024];
+  Paint paint(image, 128, 18);    //width should be the multiple of 8 
+  paint.Clear(UNCOLORED);
+  paint.DrawStringAt(0, 0, "e-Paper Demo", &Font12, COLORED);
+  epd.SetPartialWindowBlack(paint.GetImage(), 24, 32, paint.GetWidth(), paint.GetHeight());
+    /* This displays the data from the SRAM in e-Paper module */
+  epd.DisplayFrame();
+    /* Deep sleep */
+  epd.Sleep();
+  }
 
 }

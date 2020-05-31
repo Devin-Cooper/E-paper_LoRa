@@ -32,7 +32,7 @@
 
 // Pin definition
 #define RST_PIN         9
-#define DC_PIN          10
+#define DC_PIN          6
 #define CS_PIN          11
 #define BUSY_PIN        12
 

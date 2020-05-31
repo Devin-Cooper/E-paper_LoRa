@@ -78,7 +78,7 @@ void setup() {
   epd.DisplayFrame(IMAGE_BLACK, IMAGE_RED);
 */
   /* Deep sleep */
-  epd.Sleep();
+ // epd.Sleep();
 
 
 delay(500);
@@ -110,7 +110,7 @@ void loop() {
   unsigned char image[1024];
   Paint paint(image, 128, 18);    //width should be the multiple of 8 
   paint.Clear(UNCOLORED);
-  paint.DrawStringAt(0, 0, "e-Paper Demo", &Font12, COLORED);
+  paint.DrawStringAt(0, 0, "i dont know", &Font12, COLORED);
   epd.SetPartialWindowBlack(paint.GetImage(), 24, 32, paint.GetWidth(), paint.GetHeight());
     /* This displays the data from the SRAM in e-Paper module */
   epd.DisplayFrame();

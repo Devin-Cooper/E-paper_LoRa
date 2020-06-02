@@ -31,20 +31,7 @@ void setup() {
   Serial.begin(9600);                   // initialize serial
   //while (!Serial);
 
-  Serial.println("LoRa Duplex with callback");
 
-  // override the default CS, reset, and IRQ pins (optional)
-  LoRa.setPins(SS,RST,DI0);
-
-  if (!LoRa.begin(915E6)) {             // initialize ratio at 915 MHz
-    Serial.println("LoRa init failed. Check your connections.");
-    while (true);                       // if failed, do nothing
-  }
-  LoRa.setSpreadingFactor(8);           // ranges from 6-12,default 7 see API docs
-  LoRa.onReceive(onReceive);
-  LoRa.receive();
-  Serial.println("LoRa init succeeded.");
-  LoRa.sleep();
 
 //Init the display 
  Epd epd;
@@ -104,7 +91,22 @@ void setup() {
   epd.DisplayFrame(IMAGE_BLACK, IMAGE_RED);
 
   /* Deep sleep */
- // epd.Sleep();
+  epd.Sleep();
+
+  Serial.println("LoRa Duplex with callback");
+
+  // override the default CS, reset, and IRQ pins (optional)
+  LoRa.setPins(SS,RST,DI0);
+
+  if (!LoRa.begin(915E6)) {             // initialize ratio at 915 MHz
+    Serial.println("LoRa init failed. Check your connections.");
+    while (true);                       // if failed, do nothing
+  }
+  LoRa.setSpreadingFactor(8);           // ranges from 6-12,default 7 see API docs
+  LoRa.onReceive(onReceive);
+  LoRa.receive();
+  Serial.println("LoRa init succeeded.");
+  //LoRa.sleep();
 
   
 }

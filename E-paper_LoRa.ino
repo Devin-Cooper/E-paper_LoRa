@@ -1,3 +1,5 @@
+
+#include <SD.h>
 #include <SPI.h>
 #include "epd2in9b.h"
 #include "imagedata.h"
@@ -24,6 +26,8 @@ byte localAddress = 0xBB;     // address of this device
 byte destination = 0xFF;      // destination to send to
 long lastSendTime = 0;        // last send time
 int interval = 2000;          // interval between sends
+int i = 0;
+
 
 
 void setup() {
@@ -168,4 +172,15 @@ void onReceive(int packetSize) {
   Serial.println("RSSI: " + String(LoRa.packetRssi()));
   Serial.println("Snr: " + String(LoRa.packetSnr()));
   Serial.println();
+}
+
+
+unsigned char value;
+void sendbuffer() {
+  unsigned char sendbuf [592];
+
+for(i=0; i<592; i++){
+value = // what ever you have to do to read the value
+sendbuf[i] = value;
+}
 }

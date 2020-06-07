@@ -116,16 +116,16 @@ void setup() {
 }
 
 String payload;
+byte payloadByte;
 
 void loop() {
   for(i=0; i<591; ){
-  if ((millis() - lastSendTime > interval) && (i<591)) {   
- String payload = String(IMAGE_BLACK[i]);
-    String message = String(payload);   // send a message
+  if ((millis() - lastSendTime > interval) && (i<590)) {   
     String inc = String(i); //
-    sendMessage(message);
+    String payload = String((byte)IMAGE_BLACK[i]);
+    sendByte(IMAGE_BLACK[i]);
     Serial.println("inc " + inc);
-    Serial.println("Sending " + message);
+    Serial.println("Sending " + payload);
     lastSendTime = millis();            // timestamp the message
     interval = 1000;     //random(2000) + 1000;     // 2-3 seconds
     LoRa.receive();                     // go back into receive mode
@@ -145,6 +145,17 @@ void sendMessage(String outgoing) {
   msgCount++;                           // increment message ID
 }
 
+void sendByte(byte payloadByte) {
+  LoRa.beginPacket();                   // start packet
+  LoRa.write(destination);              // add destination address
+  LoRa.write(localAddress);             // add sender address
+  LoRa.write(msgCount);                 // add message ID 
+  LoRa.write(1);                        // add payload length
+  LoRa.write(payloadByte);              // add payload byte
+ // LoRa.print(outgoing);                 // add payload
+  LoRa.endPacket();                     // finish packet and send it
+  msgCount++;                           // increment message ID
+}
 
 
 void onReceive(int packetSize) {

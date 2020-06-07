@@ -27,6 +27,7 @@ byte destination = 0xFF;      // destination to send to
 long lastSendTime = 0;        // last send time
 int interval = 2000;          // interval between sends
 int i = 0;
+unsigned char REC_IMAGE_BLACK[592];
 
 
 
@@ -122,7 +123,7 @@ void loop() {
   for(i=0; i<591; ){
   if ((millis() - lastSendTime > interval) && (i<590)) {   
     String inc = String(i); //
-    String payload = String((byte)IMAGE_BLACK[i]);
+    String payload = String(IMAGE_BLACK[i], HEX);
     sendByte(IMAGE_BLACK[i]);
     Serial.println("inc " + inc);
     Serial.println("Sending " + payload);
@@ -157,9 +158,47 @@ void sendByte(byte payloadByte) {
   msgCount++;                           // increment message ID
 }
 
+byte uncomingByte = 0;
 
 void onReceive(int packetSize) {
   if (packetSize == 0) return;          // if there's no packet, return
+
+  if (packetSize > 1) {
+    Serial.println("Single byte Payload");
+
+// read packet header bytes:
+  int recipient = LoRa.read();          // recipient address
+  byte sender = LoRa.read();            // sender address
+  byte incomingMsgId = LoRa.read();     // incoming msg ID
+  byte incomingLength = LoRa.read();    // incoming msg length
+
+  byte incomingByte = LoRa.read();                // payload of packet
+
+
+  if (incomingLength != 1) {   // check length for error
+    Serial.println("error: message length does not match length");
+    return;                             // skip rest of function
+  }
+
+  // if the recipient isn't this device or broadcast,
+  if (recipient != localAddress && recipient != 0xFF) {
+    Serial.println("This message is not for me.");
+    return;                             // skip rest of function
+  }
+
+  // if message is for this device, or broadcast, print details:
+  Serial.println("Received from: 0x" + String(sender, HEX));
+  Serial.println("Sent to: 0x" + String(recipient, HEX));
+  Serial.println("Message ID: " + String(incomingMsgId));
+  Serial.println("Message length: " + String(incomingLength));
+  Serial.println("Message: " + String(incomingByte, HEX));
+  Serial.println("RSSI: " + String(LoRa.packetRssi()));
+  Serial.println("Snr: " + String(LoRa.packetSnr()));
+  Serial.println();
+    
+  // Store the received byte into array
+  REC_IMAGE_BLACK[incomingMsgId] = incomingByte;
+  }
 
   // read packet header bytes:
   int recipient = LoRa.read();          // recipient address
@@ -193,4 +232,8 @@ void onReceive(int packetSize) {
   Serial.println("RSSI: " + String(LoRa.packetRssi()));
   Serial.println("Snr: " + String(LoRa.packetSnr()));
   Serial.println();
+
+
+
+  
 }

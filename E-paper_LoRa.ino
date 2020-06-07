@@ -158,12 +158,11 @@ void sendByte(byte payloadByte) {
   msgCount++;                           // increment message ID
 }
 
-byte uncomingByte = 0;
 
 void onReceive(int packetSize) {
   if (packetSize == 0) return;          // if there's no packet, return
 
-  if (packetSize > 1) {
+  if (packetSize == 5) {
     Serial.println("Single byte Payload");
 
 // read packet header bytes:
@@ -199,7 +198,7 @@ void onReceive(int packetSize) {
   // Store the received byte into array
   REC_IMAGE_BLACK[incomingMsgId] = incomingByte;
   }
-
+else {
   // read packet header bytes:
   int recipient = LoRa.read();          // recipient address
   byte sender = LoRa.read();            // sender address
@@ -231,9 +230,10 @@ void onReceive(int packetSize) {
   Serial.println("Message: " + incoming);
   Serial.println("RSSI: " + String(LoRa.packetRssi()));
   Serial.println("Snr: " + String(LoRa.packetSnr()));
+  Serial.println("Packet Size: " + String(packetSize));
   Serial.println();
 
-
+}
 
   
 }

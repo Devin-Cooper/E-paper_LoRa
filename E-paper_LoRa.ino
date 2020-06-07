@@ -115,14 +115,22 @@ void setup() {
   
 }
 
+String payload;
+
 void loop() {
-  if (millis() - lastSendTime > interval) {
-    String message = "HeLoRa World!";   // send a message
+  for(i=0; i<591; ){
+  if ((millis() - lastSendTime > interval) && (i<591)) {   
+ String payload = String(IMAGE_BLACK[i]);
+    String message = String(payload);   // send a message
+    String inc = String(i); //
     sendMessage(message);
+    Serial.println("inc " + inc);
     Serial.println("Sending " + message);
     lastSendTime = millis();            // timestamp the message
-    interval = random(2000) + 1000;     // 2-3 seconds
+    interval = 1000;     //random(2000) + 1000;     // 2-3 seconds
     LoRa.receive();                     // go back into receive mode
+    i++;
+    } 
   }
 }
 
@@ -136,6 +144,8 @@ void sendMessage(String outgoing) {
   LoRa.endPacket();                     // finish packet and send it
   msgCount++;                           // increment message ID
 }
+
+
 
 void onReceive(int packetSize) {
   if (packetSize == 0) return;          // if there's no packet, return
@@ -172,15 +182,4 @@ void onReceive(int packetSize) {
   Serial.println("RSSI: " + String(LoRa.packetRssi()));
   Serial.println("Snr: " + String(LoRa.packetSnr()));
   Serial.println();
-}
-
-
-unsigned char value;
-void sendbuffer() {
-  unsigned char sendbuf [592];
-
-for(i=0; i<592; i++){
-value = // what ever you have to do to read the value
-sendbuf[i] = value;
-}
 }

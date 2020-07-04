@@ -1,5 +1,4 @@
 
-#include <SD.h>
 #include <SPI.h>
 #include "epd2in9b.h"
 #include "imagedata.h"
@@ -27,6 +26,7 @@ byte destination = 0xFF;      // destination to send to
 long lastSendTime = 0;        // last send time
 int interval = 2000;          // interval between sends
 int i = 0;
+byte displayflag = 1;
 unsigned char REC_IMAGE_BLACK[592];
 
 
@@ -121,6 +121,22 @@ byte payloadByte;
 
 void loop() {
   for(i=0; i<591; ){
+  if (displayflag == 1) {
+
+    
+  //Init the display 
+  Epd epd;
+
+  /* This displays the data from the SRAM in e-Paper module */
+  epd.DisplayFrame();
+
+  // This displays an image 
+  epd.DisplayFrame(REC_IMAGE_BLACK, IMAGE_RED);
+
+  /* Deep sleep */
+  epd.Sleep();
+    
+  }
   if ((millis() - lastSendTime > interval) && (i<590)) {   
     String inc = String(i); //
     String payload = String(IMAGE_BLACK[i], HEX);
@@ -162,7 +178,7 @@ void sendByte(byte payloadByte) {
 void onReceive(int packetSize) {
   if (packetSize == 0) return;          // if there's no packet, return
 
-  if (packetSize == 5) {
+  else if (packetSize == 5) {
     Serial.println("Single byte Payload");
 
 // read packet header bytes:
@@ -170,20 +186,20 @@ void onReceive(int packetSize) {
   byte sender = LoRa.read();            // sender address
   byte incomingMsgId = LoRa.read();     // incoming msg ID
   byte incomingLength = LoRa.read();    // incoming msg length
-
   byte incomingByte = LoRa.read();                // payload of packet
 
-
-  if (incomingLength != 1) {   // check length for error
+    if (incomingLength != 1) {   // check length for error
     Serial.println("error: message length does not match length");
     return;                             // skip rest of function
-  }
-
+    }
   // if the recipient isn't this device or broadcast,
   if (recipient != localAddress && recipient != 0xFF) {
     Serial.println("This message is not for me.");
     return;                             // skip rest of function
   }
+  
+  // Store the received byte into array
+  REC_IMAGE_BLACK[incomingMsgId] = incomingByte;
 
   // if message is for this device, or broadcast, print details:
   Serial.println("Received from: 0x" + String(sender, HEX));
@@ -194,35 +210,36 @@ void onReceive(int packetSize) {
   Serial.println("RSSI: " + String(LoRa.packetRssi()));
   Serial.println("Snr: " + String(LoRa.packetSnr()));
   Serial.println();
-    
-  // Store the received byte into array
-  REC_IMAGE_BLACK[incomingMsgId] = incomingByte;
   }
-else {
-  // read packet header bytes:
+
+  //if packet is non-zero and is greater than one byte then assume it is a string
+  
+  else {
+        Serial.println("String Payload");
+
+                                         // read packet header bytes:
   int recipient = LoRa.read();          // recipient address
   byte sender = LoRa.read();            // sender address
   byte incomingMsgId = LoRa.read();     // incoming msg ID
   byte incomingLength = LoRa.read();    // incoming msg length
-
   String incoming = "";                 // payload of packet
 
+  
   while (LoRa.available()) {            // can't use readString() in callback, so
     incoming += (char)LoRa.read();      // add bytes one by one
+  }
+      // if the recipient isn't this device or broadcast, 
+  if (recipient != localAddress && recipient != 0xFF) {
+    Serial.println("This message is not for me.");
+    return;                             // skip rest of function
   }
 
   if (incomingLength != incoming.length()) {   // check length for error
     Serial.println("error: message length does not match length");
     return;                             // skip rest of function
   }
-
-  // if the recipient isn't this device or broadcast,
-  if (recipient != localAddress && recipient != 0xFF) {
-    Serial.println("This message is not for me.");
-    return;                             // skip rest of function
-  }
-
-  // if message is for this device, or broadcast, print details:
+  
+    // if message is for this device, or broadcast, print details:
   Serial.println("Received from: 0x" + String(sender, HEX));
   Serial.println("Sent to: 0x" + String(recipient, HEX));
   Serial.println("Message ID: " + String(incomingMsgId));
@@ -233,7 +250,6 @@ else {
   Serial.println("Packet Size: " + String(packetSize));
   Serial.println();
 
-}
 
-  
-}
+  }
+  }

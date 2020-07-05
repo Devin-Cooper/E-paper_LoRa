@@ -20,7 +20,7 @@
   #define PABOOST true 
   
 String outgoing;              // outgoing message
-byte msgCount = 0;            // count of outgoing messages
+int msgCount = 0;            // count of outgoing messages
 byte localAddress = 0xBB;     // address of this device
 byte destination = 0xFF;      // destination to send to
 long lastSendTime = 0;        // last send time
@@ -28,6 +28,7 @@ int interval = 2000;          // interval between sends
 int i = 0;
 byte displayflag = 1;
 unsigned char REC_IMAGE_BLACK[592];
+int incomingMsgId = 0;
 
 
 
@@ -107,7 +108,7 @@ void setup() {
     Serial.println("LoRa init failed. Check your connections.");
     while (true);                       // if failed, do nothing
   }
-  LoRa.setSpreadingFactor(8);           // ranges from 6-12,default 7 see API docs
+  LoRa.setSpreadingFactor(7);           // ranges from 6-12,default 7 see API docs
   LoRa.onReceive(onReceive);
   LoRa.receive();
   Serial.println("LoRa init succeeded.");
@@ -138,13 +139,13 @@ void loop() {
     
   }
   if ((millis() - lastSendTime > interval) && (i<590)) {   
-    String inc = String(i); //
+    int inc = int(i); //
     String payload = String(IMAGE_BLACK[i], HEX);
     sendByte(IMAGE_BLACK[i]);
-    Serial.println("inc " + inc);
+    Serial.println("inc " + String(inc));
     Serial.println("Sending " + payload);
     lastSendTime = millis();            // timestamp the message
-    interval = 1000;     //random(2000) + 1000;     // 2-3 seconds
+    interval = 500;     //random(2000) + 1000;     // 2-3 seconds
     LoRa.receive();                     // go back into receive mode
     i++;
     } 
@@ -166,7 +167,8 @@ void sendByte(byte payloadByte) {
   LoRa.beginPacket();                   // start packet
   LoRa.write(destination);              // add destination address
   LoRa.write(localAddress);             // add sender address
-  LoRa.write(msgCount);                 // add message ID 
+  LoRa.write(highByte(msgCount));                 // add message ID 
+  LoRa.write(lowByte(msgCount));                 // add message ID 
   LoRa.write(1);                        // add payload length
   LoRa.write(payloadByte);              // add payload byte
  // LoRa.print(outgoing);                 // add payload
@@ -178,18 +180,22 @@ void sendByte(byte payloadByte) {
 void onReceive(int packetSize) {
   if (packetSize == 0) return;          // if there's no packet, return
 
-  else if (packetSize == 5) {
+  else if (packetSize == 6) {
     Serial.println("Single byte Payload");
 
 // read packet header bytes:
   int recipient = LoRa.read();          // recipient address
   byte sender = LoRa.read();            // sender address
-  byte incomingMsgId = LoRa.read();     // incoming msg ID
+  byte incomingHigh = LoRa.read();     // incoming msg ID
+  byte incomingLow = LoRa.read();     // incoming msg ID
   byte incomingLength = LoRa.read();    // incoming msg length
   byte incomingByte = LoRa.read();                // payload of packet
+//  byte incomingByte2 = LoRa.read();
+  incomingMsgId = word(incomingHigh, incomingLow);
 
     if (incomingLength != 1) {   // check length for error
     Serial.println("error: message length does not match length");
+    Serial.println("Message length: " + String(incomingLength));
     return;                             // skip rest of function
     }
   // if the recipient isn't this device or broadcast,
@@ -207,6 +213,7 @@ void onReceive(int packetSize) {
   Serial.println("Message ID: " + String(incomingMsgId));
   Serial.println("Message length: " + String(incomingLength));
   Serial.println("Message: " + String(incomingByte, HEX));
+ // Serial.println("Message: " + String(incomingByte2, HEX));
   Serial.println("RSSI: " + String(LoRa.packetRssi()));
   Serial.println("Snr: " + String(LoRa.packetSnr()));
   Serial.println();
@@ -216,6 +223,7 @@ void onReceive(int packetSize) {
   
   else {
         Serial.println("String Payload");
+        Serial.println(packetSize);
 
                                          // read packet header bytes:
   int recipient = LoRa.read();          // recipient address
@@ -236,6 +244,7 @@ void onReceive(int packetSize) {
 
   if (incomingLength != incoming.length()) {   // check length for error
     Serial.println("error: message length does not match length");
+    Serial.println("Message length: " + String(incomingLength));
     return;                             // skip rest of function
   }
   

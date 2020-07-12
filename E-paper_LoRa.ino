@@ -5,6 +5,10 @@
 #include "epdpaint.h"
 #include <LoRa.h>
 
+#include <SD.h>
+
+File myFile;
+
 
 #define COLORED     0
 #define UNCOLORED   1
@@ -27,7 +31,7 @@ long lastSendTime = 0;        // last send time
 int interval = 2000;          // interval between sends
 int i = 0;
 byte displayflag = 1;
-unsigned char REC_IMAGE_BLACK[592];
+//unsigned char REC_IMAGE_BLACK[592];
 int incomingMsgId = 0;
 //const unsigned char IMAGE_test[128];
 
@@ -46,6 +50,9 @@ void setup() {
     Serial.print("e-Paper init failed");
     return;
   }
+
+
+
 
   /* This clears the SRAM of the e-paper display */
   epd.ClearFrame();
@@ -99,6 +106,44 @@ void setup() {
   /* Deep sleep */
   epd.Sleep();
 
+
+    int index = 0;
+ unsigned char data;
+
+  if (!SD.begin(13)) {
+    Serial.println("initialization failed!");
+    while (1);
+  }
+  Serial.println("initialization done.");
+
+
+    // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  myFile = SD.open("test.txt", FILE_WRITE);
+
+
+  // if the file opened okay, write to it:
+  if (myFile) {
+    Serial.print("Writing to test.txt...");
+
+  while((myFile.println(data)) >= 0)
+  {
+    data = IMAGE_BLACK[index++];
+  }
+
+
+    
+    // close the file:
+    myFile.close();
+    Serial.println("done.");
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+
+
+
+
   Serial.println("LoRa Duplex with callback");
 
   // override the default CS, reset, and IRQ pins (optional)
@@ -140,7 +185,7 @@ for(int i = 0; i < 128; i++)
   epd.DisplayFrame();
 
   // This displays an image 
-  epd.DisplayFrame(REC_IMAGE_BLACK, IMAGE_RED);
+//  epd.DisplayFrame(REC_IMAGE_BLACK, IMAGE_RED);
 
   /* Deep sleep */
   epd.Sleep();
@@ -213,7 +258,7 @@ void onReceive(int packetSize) {
   }
   
   // Store the received byte into array
-  REC_IMAGE_BLACK[incomingMsgId] = incomingByte;
+//  REC_IMAGE_BLACK[incomingMsgId] = incomingByte;
 
   // if message is for this device, or broadcast, print details:
   Serial.println("Received from: 0x" + String(sender, HEX));

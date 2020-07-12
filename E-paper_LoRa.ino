@@ -29,7 +29,7 @@ int i = 0;
 byte displayflag = 1;
 unsigned char REC_IMAGE_BLACK[592];
 int incomingMsgId = 0;
-
+//const unsigned char IMAGE_test[128];
 
 
 void setup() {
@@ -121,6 +121,14 @@ String payload;
 byte payloadByte;
 
 void loop() {
+for(int i = 0; i < 128; i++)
+{
+  Serial.println (String((IMAGE_test[i]), HEX));
+}
+
+
+
+  
   for(i=0; i<591; ){
   if (displayflag == 1) {
 
@@ -139,13 +147,13 @@ void loop() {
     
   }
   if ((millis() - lastSendTime > interval) && (i<590)) {   
-    int inc = int(i); //
-    String payload = String(IMAGE_BLACK[i], HEX);
+    int inc = i;
+    String payload = String((IMAGE_BLACK[i]), HEX);
     sendByte(IMAGE_BLACK[i]);
     Serial.println("inc " + String(inc));
     Serial.println("Sending " + payload);
     lastSendTime = millis();            // timestamp the message
-    interval = 500;     //random(2000) + 1000;     // 2-3 seconds
+    interval = 1000;     //random(2000) + 1000;     // 2-3 seconds
     LoRa.receive();                     // go back into receive mode
     i++;
     } 
